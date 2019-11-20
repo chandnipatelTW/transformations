@@ -9,7 +9,7 @@ import thoughtworks.DefaultFeatureSpecWithSpark
 
 class WordCountTest extends DefaultFeatureSpecWithSpark {
   feature("Word Count application") {
-    ignore("Acceptance test for basic use") {
+    scenario("Acceptance test for basic use") {
       Given("A simple input file, a Spark context, and a known output file")
 
       val rootDirectory = Files.createTempDirectory(this.getClass.getName)
