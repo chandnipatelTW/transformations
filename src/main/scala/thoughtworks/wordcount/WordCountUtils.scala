@@ -2,8 +2,6 @@ package thoughtworks.wordcount
 
 import org.apache.spark.sql.{Dataset, SparkSession}
 
-case class WordCountRow(word: String, count: BigInt)
-
 object WordCountUtils {
   implicit class StringDataset(val dataSet: Dataset[String]) {
     def splitWords(spark: SparkSession) = {
@@ -13,6 +11,7 @@ object WordCountUtils {
         .flatMap(x => x.split(",+"))
         .flatMap(x => x.split("-+"))
         .flatMap(x => x.split(";+"))
+        .flatMap(x => x.split("\"+"))
         .filter(x => x != "")
     }
 
@@ -20,7 +19,8 @@ object WordCountUtils {
       import spark.implicits._
       dataSet
           .map(word => word.toLowerCase)
-          .groupBy($"value".as("word")).count().as[WordCountRow]
+          .groupBy($"value".as("word")).count()
+          .orderBy($"word")
     }
   }
 }

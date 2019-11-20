@@ -1,7 +1,6 @@
 package thoughtworks.wordcount
 
-import WordCountUtils._
-import org.apache.spark.sql.Dataset
+import org.apache.spark.sql.Row
 import thoughtworks.DefaultFeatureSpecWithSpark
 
 
@@ -100,6 +99,27 @@ class WordCountUtilsTest extends DefaultFeatureSpecWithSpark {
       assert(expectedDS.collect().toSeq == outputDS.collect().toSeq)
     }
 
+    scenario("test splitting a dataset of words by double quotes") {
+      Given("words with multiple double quotes")
+      import spark.implicits._
+      val inputDS = Seq(
+        "\"start",
+        "middle\"semicolon",
+        "end\"",
+        "\"many\"semicolon\"\"in\"string\"").toDS()
+
+      When("split words is called")
+      val outputDS = WordCountUtils.StringDataset(inputDS).splitWords(spark)
+
+      Then("should result dataset of all words without double quotes")
+      val  expectedDS = Seq(
+        "start", "middle", "semicolon", "end",
+        "many", "semicolon", "in", "string"
+      ).toDS()
+
+      assert(expectedDS.collect().toSeq == outputDS.collect().toSeq)
+    }
+
     scenario("test splitting a dataset of words with separators at start or end") {
       Given("words with separator at start")
       import spark.implicits._
@@ -137,8 +157,8 @@ class WordCountUtilsTest extends DefaultFeatureSpecWithSpark {
       val outputDS = WordCountUtils.StringDataset(inputDS).countByWord(spark)
 
       Then("should result in dataframe with word counts")
-      val expectedDS = Seq(WordCountRow("one", 1), WordCountRow("two", 1)).toDS()
-      expectedDS.collect() should contain theSameElementsAs outputDS.collect()
+      val expectedDS = Seq(Row("one", 1), Row("two", 1))
+      outputDS.collect().toSeq should be(expectedDS)
     }
 
     scenario("test count for similar words") {
@@ -150,8 +170,8 @@ class WordCountUtilsTest extends DefaultFeatureSpecWithSpark {
       val outputDS = WordCountUtils.StringDataset(inputDS).countByWord(spark)
 
       Then("should result in dataset with word counts")
-      val expectedDS = Seq(WordCountRow("one", 1), WordCountRow("two", 2)).toDS()
-      expectedDS.collect() should contain theSameElementsAs outputDS.collect()
+      val expectedDS = Seq(Row("one", 1), Row("two", 2))
+      outputDS.collect().toSeq should contain theSameElementsAs expectedDS
     }
 
     scenario("test case insensitivity in words") {
@@ -163,13 +183,36 @@ class WordCountUtilsTest extends DefaultFeatureSpecWithSpark {
       val outputDS = WordCountUtils.StringDataset(inputDS).countByWord(spark)
 
       Then("should result in dataset with word counts irrespective of case")
-      val expectedDS = Seq(WordCountRow("one", 1), WordCountRow("two", 3)).toDS()
-      expectedDS.collect() should contain theSameElementsAs outputDS.collect()
+      val expectedDS = Seq(Row("one", 1), Row("two", 3))
+      outputDS.collect().toSeq should contain theSameElementsAs expectedDS
     }
   }
 
   feature("Sort Words") {
-    ignore("test ordering words") {}
+    scenario("test ordering words") {
+      Given("dataset of WordCount")
+      import spark.implicits._
+      val wordCountDS = Seq("one", "two", "two").toDS()
+      When("sort is called")
+      val sortedDS = WordCountUtils.StringDataset(wordCountDS).countByWord(spark)
+
+      Then("should result in dataset ordered by word")
+      val expectedDS = Seq(Row("one", 1), Row("two", 2))
+      sortedDS.collect().toSeq should be (expectedDS)
+    }
+
+    scenario("test ordering words with apostrophe") {
+      Given("dataset of WordCount")
+      import spark.implicits._
+      val wordCountDS = Seq("you've", "you").toDS()
+
+      When("sort is called")
+      val sortedDS = WordCountUtils.StringDataset(wordCountDS).countByWord(spark)
+
+      Then("should result in dataset ordered by word")
+      val expectedDS = Seq(Row("you", 1), Row("you've", 1))
+      sortedDS.collect().toSeq should be (expectedDS)
+    }
   }
 
 }
