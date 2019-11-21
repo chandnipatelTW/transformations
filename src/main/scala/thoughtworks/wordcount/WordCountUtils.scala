@@ -7,7 +7,7 @@ object WordCountUtils {
     def splitWords(spark: SparkSession) = {
       import spark.implicits._
       dataSet
-        .flatMap(x => x.split("[\\s\\.;\\-,\"]+"))
+        .flatMap(x => x.split("[^\\w']+"))
         .filter(x => x != "")
     }
 

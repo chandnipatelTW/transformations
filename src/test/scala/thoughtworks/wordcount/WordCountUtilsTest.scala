@@ -136,13 +136,14 @@ class WordCountUtilsTest extends DefaultFeatureSpecWithSpark {
       Given("words with mutiple separators")
       import spark.implicits._
       val inputDS = Seq(" space.period", ",comma,hyphen-", "semi-colon;dot",
-        ",all.the-separators; here").toDS()
+        ",all.the-separators; here", "?Hello!World(some)*45").toDS()
 
       val outputDS = WordCountUtils.StringDataset(inputDS).splitWords(spark)
 
       Then("should result dataset without empty words and separators")
       val  expectedDS = Seq("space", "period", "comma", "hyphen",
-      "semi", "colon", "dot", "all", "the", "separators", "here").toDS()
+      "semi", "colon", "dot", "all", "the", "separators", "here",
+        "Hello", "World", "some", "45").toDS()
       assert(expectedDS.collect().toSeq == outputDS.collect().toSeq)
     }
   }
