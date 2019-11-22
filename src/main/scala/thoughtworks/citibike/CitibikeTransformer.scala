@@ -41,8 +41,6 @@ object CitibikeTransformer {
       .parquet(ingestPath)
       .computeDistances(sparkSession)
 
-    df.show(false)
-
     df
       .write
       .parquet(outputPath)
